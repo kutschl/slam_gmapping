@@ -69,6 +69,9 @@ void SlamGmapping::init() {
     this->declare_parameter<std::string>("odom_frame", "odom", 
         rcl_interfaces::msg::ParameterDescriptor().set__description("The frame attached to the odometry system."));
 
+    this->declare_parameter<std::string>("scan_topic", "/scan", 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("The laser scan topic."));
+
     this->declare_parameter<float>("map_update_interval", 5.0, 
         rcl_interfaces::msg::ParameterDescriptor().set__description("How long (in seconds) between updates to the map. Lowering this number updates the occupancy grid more often, at the expense of greater computational load."));
 
@@ -174,6 +177,7 @@ void SlamGmapping::init() {
     this->get_parameter("base_frame", base_frame_);
     this->get_parameter("map_frame", map_frame_);
     this->get_parameter("odom_frame", odom_frame_);
+    this->get_parameter("scan_topic", scan_topic_);
     this->get_parameter("transform_publish_period", transform_publish_period_);
     this->get_parameter("map_update_interval", map_update_interval_seconds_);
     map_update_interval_ = tf2::Duration(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(map_update_interval_seconds_)));
@@ -208,43 +212,6 @@ void SlamGmapping::init() {
     this->get_parameter("lasamplerange", lasamplerange_);
     this->get_parameter("lasamplestep", lasamplestep_);
 
-
-    // throttle_scans_ = 1;
-    // base_frame_ = "base_link";
-    // map_frame_ = "map";
-    // odom_frame_ = "odom";
-    // transform_publish_period_ = 0.05;
-
-    // map_update_interval_ = tf2::durationFromSec(0.5);
-    // maxUrange_ = 80.0;  maxRange_ = 0.0;
-    // minimum_score_ = 0;
-    // sigma_ = 0.05;
-    // kernelSize_ = 1;
-    // lstep_ = 0.05;
-    // astep_ = 0.05;
-    // iterations_ = 5;
-    // lsigma_ = 0.075;
-    // ogain_ = 3.0;
-    // lskip_ = 0;
-    // srr_ = 0.1;
-    // srt_ = 0.2;
-    // str_ = 0.1;
-    // stt_ = 0.2;
-    // linearUpdate_ = 1.0;
-    // angularUpdate_ = 0.5;
-    // temporalUpdate_ = 1.0;
-    // resampleThreshold_ = 0.5;
-    // particles_ = 30;
-    // xmin_ = -10.0;
-    // ymin_ = -10.0;
-    // xmax_ = 10.0;
-    // ymax_ = 10.0;
-    // delta_ = 0.05;
-    // occ_thresh_ = 0.25;
-    // llsamplerange_ = 0.01;
-    // llsamplestep_ = 0.01;
-    // lasamplerange_ = 0.005;
-    // lasamplestep_ = 0.005;
     tf_delay_ = transform_publish_period_;
 }
 
@@ -253,7 +220,7 @@ void SlamGmapping::startLiveSlam() {
     sst_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("map", rclcpp::SystemDefaultsQoS());
     sstm_ = this->create_publisher<nav_msgs::msg::MapMetaData>("map_metadata", rclcpp::SystemDefaultsQoS());
     scan_filter_sub_ = std::make_shared<message_filters::Subscriber<sensor_msgs::msg::LaserScan>>
-            (node_, "scan", rclcpp::SensorDataQoS().get_rmw_qos_profile());
+            (node_, scan_topic_, rclcpp::SensorDataQoS().get_rmw_qos_profile());
 //    sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
 //        "scan", rclcpp::SensorDataQoS(),
 //        std::bind(&SlamGmapping::laserCallback, this, std::placeholders::_1));

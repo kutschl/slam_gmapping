@@ -4,6 +4,7 @@ slam_gmapping:
     base_frame: "base_link"  # The frame attached to the mobile base
     map_frame: "map"  # The frame attached to the map
     odom_frame: "odom"  # The frame attached to the odometry system
+    scan_topic: "/scan" # The laser scan topic
     transform_publish_period: 0.05  # Interval in seconds between transform publications (0 to disable broadcasting transforms)
     map_update_interval: 0.5  # Interval in seconds between updates to the map; lower means more updates, higher CPU load
     maxUrange: 80.0  # Maximum usable range of the laser; a beam is cropped to this value
