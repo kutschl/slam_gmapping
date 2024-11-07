@@ -21,6 +21,10 @@
 // Created by shivesh on 29/10/18.
 //
 
+//
+// Migrated to ROS 2 Humble by Lukas Kutsch
+//
+
 #include "slam_gmapping/slam_gmapping.h"
 
 #include "tf2_ros/create_timer_ros.h"
@@ -53,47 +57,194 @@ SlamGmapping::SlamGmapping():
 void SlamGmapping::init() {
     gsp_ = new GMapping::GridSlamProcessor();
 
+    this->declare_parameter<int>("throttle_scans", 1, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Process 1 out of every this many scans (set to a higher number to skip more scans)"));
+
+    this->declare_parameter<std::string>("base_frame", "base_link", 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("The frame attached to the mobile base."));
+
+    this->declare_parameter<std::string>("map_frame", "map", 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("The frame attached to the map."));
+
+    this->declare_parameter<std::string>("odom_frame", "odom", 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("The frame attached to the odometry system."));
+
+    this->declare_parameter<float>("map_update_interval", 5.0, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("How long (in seconds) between updates to the map. Lowering this number updates the occupancy grid more often, at the expense of greater computational load."));
+
+    this->declare_parameter<float>("maxUrange", 80.0, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("The maximum usable range of the laser. A beam is cropped to this value."));
+
+    this->declare_parameter<float>("sigma", 0.05, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("The sigma used by the greedy endpoint matching."));
+
+    this->declare_parameter<int>("kernelSize", 1, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("The kernel in which to look for a correspondence."));
+
+    this->declare_parameter<float>("lstep", 0.05, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("The optimization step in translation."));
+
+    this->declare_parameter<float>("astep", 0.05, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("The optimization step in rotation."));
+
+    this->declare_parameter<int>("iterations", 5, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("The number of iterations of the scan matcher."));
+
+    this->declare_parameter<float>("lsigma", 0.075, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("The sigma of a beam used for likelihood computation."));
+
+    this->declare_parameter<float>("ogain", 3.0, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Gain to be used while evaluating the likelihood, for smoothing the resampling effects."));
+
+    this->declare_parameter<int>("lskip", 0, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Number of beams to skip in each scan. Take only every (n+1)th laser ray for computing a match (0 = take all rays)."));
+
+    this->declare_parameter<float>("minimumScore", 0.0, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Minimum score for considering the outcome of the scan matching good. Can avoid jumping pose estimates in large open spaces when using laser scanners with limited range."));
+
+    this->declare_parameter<float>("srr", 0.1, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Odometry error in translation as a function of translation (rho/rho)."));
+
+    this->declare_parameter<float>("srt", 0.2, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Odometry error in translation as a function of rotation (rho/theta)."));
+
+    this->declare_parameter<float>("str", 0.1, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Odometry error in rotation as a function of translation (theta/rho)."));
+
+    this->declare_parameter<float>("stt", 0.2, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Odometry error in rotation as a function of rotation (theta/theta)."));
+
+    this->declare_parameter<float>("linearUpdate", 1.0, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Process a scan each time the robot translates this far."));
+
+    this->declare_parameter<float>("angularUpdate", 0.5, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Process a scan each time the robot rotates this far."));
+
+    this->declare_parameter<float>("temporalUpdate", -1.0, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Process a scan if the last scan processed is older than the update time in seconds. A value less than zero will turn time-based updates off."));
+
+    this->declare_parameter<float>("resampleThreshold", 0.5, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("The Neff-based resampling threshold."));
+
+    this->declare_parameter<int>("particles", 30, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Number of particles in the filter."));
+
+    this->declare_parameter<float>("xmin", -100.0, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Initial map size in meters (xmin)."));
+
+    this->declare_parameter<float>("ymin", -100.0, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Initial map size in meters (ymin)."));
+
+    this->declare_parameter<float>("xmax", 100.0, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Initial map size in meters (xmax)."));
+
+    this->declare_parameter<float>("ymax", 100.0, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Initial map size in meters (ymax)."));
+
+    this->declare_parameter<float>("delta", 0.05, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Resolution of the map in meters per occupancy grid block."));
+
+    this->declare_parameter<float>("llsamplerange", 0.01, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Translational sampling range for the likelihood."));
+
+    this->declare_parameter<float>("llsamplestep", 0.01, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Translational sampling step for the likelihood."));
+
+    this->declare_parameter<float>("lasamplerange", 0.005, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Angular sampling range for the likelihood."));
+
+    this->declare_parameter<float>("lasamplestep", 0.005, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Angular sampling step for the likelihood."));
+
+    this->declare_parameter<float>("transform_publish_period", 0.05, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("How long in seconds between transform publications. To disable broadcasting transforms, set to 0."));
+
+    this->declare_parameter<float>("occ_thresh", 0.25, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("Threshold on gmapping's occupancy values. Cells with greater occupancy are considered occupied."));
+
+    this->declare_parameter<float>("maxRange", 0.0, 
+        rcl_interfaces::msg::ParameterDescriptor().set__description("The maximum range of the sensor."));
+    
     gsp_laser_ = nullptr;
     gsp_odom_ = nullptr;
     got_first_scan_ = false;
     got_map_ = false;
 
-    throttle_scans_ = 1;
-    base_frame_ = "base_link";
-    map_frame_ = "map";
-    odom_frame_ = "odom";
-    transform_publish_period_ = 0.05;
+    this->get_parameter("throttle_scans", throttle_scans_);
+    this->get_parameter("base_frame", base_frame_);
+    this->get_parameter("map_frame", map_frame_);
+    this->get_parameter("odom_frame", odom_frame_);
+    this->get_parameter("transform_publish_period", transform_publish_period_);
+    this->get_parameter("map_update_interval", map_update_interval_seconds_);
+    map_update_interval_ = tf2::Duration(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(map_update_interval_seconds_)));
+    this->get_parameter("maxUrange", maxUrange_);
+    this->get_parameter("maxRange", maxRange_);
+    this->get_parameter("minimum_score", minimum_score_);
+    this->get_parameter("sigma", sigma_);
+    this->get_parameter("kernelSize", kernelSize_);
+    this->get_parameter("lstep", lstep_);
+    this->get_parameter("astep", astep_);
+    this->get_parameter("iterations", iterations_);
+    this->get_parameter("lsigma", lsigma_);
+    this->get_parameter("ogain", ogain_);
+    this->get_parameter("lskip", lskip_);
+    this->get_parameter("srr", srr_);
+    this->get_parameter("srt", srt_);
+    this->get_parameter("str", str_);
+    this->get_parameter("stt", stt_);
+    this->get_parameter("linearUpdate", linearUpdate_);
+    this->get_parameter("angularUpdate", angularUpdate_);
+    this->get_parameter("temporalUpdate", temporalUpdate_);
+    this->get_parameter("resampleThreshold", resampleThreshold_);
+    this->get_parameter("particles", particles_);
+    this->get_parameter("xmin", xmin_);
+    this->get_parameter("ymin", ymin_);
+    this->get_parameter("xmax", xmax_);
+    this->get_parameter("ymax", ymax_);
+    this->get_parameter("delta", delta_);
+    this->get_parameter("occ_thresh", occ_thresh_);
+    this->get_parameter("llsamplerange", llsamplerange_);
+    this->get_parameter("llsamplestep", llsamplestep_);
+    this->get_parameter("lasamplerange", lasamplerange_);
+    this->get_parameter("lasamplestep", lasamplestep_);
 
-    map_update_interval_ = tf2::durationFromSec(0.5);
-    maxUrange_ = 80.0;  maxRange_ = 0.0;
-    minimum_score_ = 0;
-    sigma_ = 0.05;
-    kernelSize_ = 1;
-    lstep_ = 0.05;
-    astep_ = 0.05;
-    iterations_ = 5;
-    lsigma_ = 0.075;
-    ogain_ = 3.0;
-    lskip_ = 0;
-    srr_ = 0.1;
-    srt_ = 0.2;
-    str_ = 0.1;
-    stt_ = 0.2;
-    linearUpdate_ = 1.0;
-    angularUpdate_ = 0.5;
-    temporalUpdate_ = 1.0;
-    resampleThreshold_ = 0.5;
-    particles_ = 30;
-    xmin_ = -10.0;
-    ymin_ = -10.0;
-    xmax_ = 10.0;
-    ymax_ = 10.0;
-    delta_ = 0.05;
-    occ_thresh_ = 0.25;
-    llsamplerange_ = 0.01;
-    llsamplestep_ = 0.01;
-    lasamplerange_ = 0.005;
-    lasamplestep_ = 0.005;
+
+    // throttle_scans_ = 1;
+    // base_frame_ = "base_link";
+    // map_frame_ = "map";
+    // odom_frame_ = "odom";
+    // transform_publish_period_ = 0.05;
+
+    // map_update_interval_ = tf2::durationFromSec(0.5);
+    // maxUrange_ = 80.0;  maxRange_ = 0.0;
+    // minimum_score_ = 0;
+    // sigma_ = 0.05;
+    // kernelSize_ = 1;
+    // lstep_ = 0.05;
+    // astep_ = 0.05;
+    // iterations_ = 5;
+    // lsigma_ = 0.075;
+    // ogain_ = 3.0;
+    // lskip_ = 0;
+    // srr_ = 0.1;
+    // srt_ = 0.2;
+    // str_ = 0.1;
+    // stt_ = 0.2;
+    // linearUpdate_ = 1.0;
+    // angularUpdate_ = 0.5;
+    // temporalUpdate_ = 1.0;
+    // resampleThreshold_ = 0.5;
+    // particles_ = 30;
+    // xmin_ = -10.0;
+    // ymin_ = -10.0;
+    // xmax_ = 10.0;
+    // ymax_ = 10.0;
+    // delta_ = 0.05;
+    // occ_thresh_ = 0.25;
+    // llsamplerange_ = 0.01;
+    // llsamplestep_ = 0.01;
+    // lasamplerange_ = 0.005;
+    // lasamplestep_ = 0.005;
     tf_delay_ = transform_publish_period_;
 }
 

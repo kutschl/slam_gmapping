@@ -20,6 +20,10 @@
 // Created by shivesh on 29/10/18.
 //
 
+//
+// Migrated to ROS 2 Humble by Lukas Kutsch
+//
+
 #ifndef SLAM_GMAPPING_SLAM_GMAPPING_H_
 #define SLAM_GMAPPING_SLAM_GMAPPING_H_
 
@@ -89,6 +93,7 @@ private:
     bool got_map_;
     nav_msgs::msg::OccupancyGrid map_;
 
+    float map_update_interval_seconds_;
     tf2::Duration map_update_interval_;
     tf2::Transform map_to_odom_;
     std::mutex map_to_odom_mutex_;

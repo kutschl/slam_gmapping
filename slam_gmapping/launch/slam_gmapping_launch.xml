@@ -1,0 +1,8 @@
+<launch>
+    <arg name="use_sim_time" default="false"/>
+    
+    <node pkg="slam_gmapping" exec="slam_gmapping" name="slam_gmapping" output="screen">
+        <param from="$(find-pkg-share slam_gmapping)/config/slam_gmapping.yaml"/>
+        <param name="use_sim_time" value="$(var use_sim_time)"/>
+    </node>
+</launch>

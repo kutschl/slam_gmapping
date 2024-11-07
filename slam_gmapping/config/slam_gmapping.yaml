@@ -1,0 +1,38 @@
+slam_gmapping:
+  ros__parameters:
+    throttle_scans: 1  # Process 1 out of every this many scans (higher number skips more scans)
+    base_frame: "base_link"  # The frame attached to the mobile base
+    map_frame: "map"  # The frame attached to the map
+    odom_frame: "odom"  # The frame attached to the odometry system
+    transform_publish_period: 0.05  # Interval in seconds between transform publications (0 to disable broadcasting transforms)
+    map_update_interval: 0.5  # Interval in seconds between updates to the map; lower means more updates, higher CPU load
+    maxUrange: 80.0  # Maximum usable range of the laser; a beam is cropped to this value
+    maxRange: 0.0  # Maximum range of the sensor
+    minimum_score: 0.0  # Minimum score to consider scan matching successful; can avoid pose jumps in open spaces
+    sigma: 0.05  # Sigma used by the greedy endpoint matching
+    kernelSize: 1  # The kernel size used for searching correspondence
+    lstep: 0.05  # Optimization step size in translation
+    astep: 0.05  # Optimization step size in rotation
+    iterations: 5  # Number of iterations for the scan matcher
+    lsigma: 0.075  # Sigma of a beam used for likelihood computation
+    ogain: 3.0  # Gain used for likelihood evaluation, smoothing resampling effects
+    lskip: 0  # Number of beams to skip per scan; 0 means all beams are used
+    srr: 0.1  # Odometry error in translation as a function of translation (rho/rho)
+    srt: 0.2  # Odometry error in translation as a function of rotation (rho/theta)
+    str: 0.1  # Odometry error in rotation as a function of translation (theta/rho)
+    stt: 0.2  # Odometry error in rotation as a function of rotation (theta/theta)
+    linearUpdate: 1.0  # Distance the robot must translate before processing another scan
+    angularUpdate: 0.5  # Angle the robot must rotate before processing another scan
+    temporalUpdate: 1.0  # Time (seconds) after which to process another scan; <0 disables time-based updates
+    resampleThreshold: 0.5  # Neff-based threshold for resampling
+    particles: 30  # Number of particles in the particle filter
+    xmin: -10.0  # Initial map size minimum x coordinate in meters
+    ymin: -10.0  # Initial map size minimum y coordinate in meters
+    xmax: 10.0  # Initial map size maximum x coordinate in meters
+    ymax: 10.0  # Initial map size maximum y coordinate in meters
+    delta: 0.05  # Map resolution in meters per occupancy grid cell
+    occ_thresh: 0.25  # Threshold for gmapping's occupancy values; cells above this are considered occupied
+    llsamplerange: 0.01  # Translational sampling range for likelihood computation
+    llsamplestep: 0.01  # Translational sampling step for likelihood computation
+    lasamplerange: 0.005  # Angular sampling range for likelihood computation
+    lasamplestep: 0.005  # Angular sampling step for likelihood computation
