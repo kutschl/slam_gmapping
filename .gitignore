@@ -27,3 +27,4 @@ log
 !openslam_gmapping/include/gmapping/log/
 !openslam_gmapping/log/
 install
+.vscode/*
